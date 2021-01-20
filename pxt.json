@@ -1,0 +1,21 @@
+{
+    "name": "SCD41",
+    "version": "0.1.0",
+    "description": "Sensirion SCD41 I2C driver",
+    "license": "MIT",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "README.md",
+        "SCD41.ts"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true,
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "tsprj"
+}
