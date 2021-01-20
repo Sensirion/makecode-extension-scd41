@@ -12,15 +12,23 @@ namespace SCD41 {
     let co2 = 0;
     let temperature = 0;
     let relative_humidity = 0;
-    let serial_number = 0;
     let feature_set = 0;
 
     init();
 
-    function read_word(repeat=false) {
+    function read_word(repeat = false) {
         let value = pins.i2cReadNumber(SCD41_I2C_ADDR, NumberFormat.UInt16BE, repeat);
-        pins.i2cReadNumber(SCD41_I2C_ADDR, NumberFormat.UInt8BE, true);  // CRC ignored for now
+        pins.i2cReadNumber(SCD41_I2C_ADDR, NumberFormat.UInt8BE, repeat);
         return value
+    }
+
+    function read_words(number_of_words: number) {
+        let buffer = pins.i2cReadBuffer(SCD41_I2C_ADDR, number_of_words * 3, false);
+        let words:number[] = [];
+        for (let i = 0; i < number_of_words; i++) {
+            words.push(buffer.getNumber(NumberFormat.UInt16BE, 3*i));
+        }
+        return words;
     }
 
     function read_feature_set() {
@@ -28,18 +36,10 @@ namespace SCD41 {
         feature_set = read_word();
     }
 
-    function read_serial_number() {
-        pins.i2cWriteNumber(SCD41_I2C_ADDR, 0x21b1, NumberFormat.UInt16BE);
-        serial_number = read_word(false) << 32 | read_word(false) << 16 | read_word();
-    }
-
     function get_data_ready_status() {
         pins.i2cWriteNumber(SCD41_I2C_ADDR, 0xE4B8, NumberFormat.UInt16BE);
         let data_ready = read_word() & 0x07FF;
-        if (data_ready > 0) {
-            return true;
-        }
-        return false;
+        return data_ready > 0;
     }
 
     function read_measurement() {
@@ -48,11 +48,12 @@ namespace SCD41 {
             return
         }
         pins.i2cWriteNumber(SCD41_I2C_ADDR, 0xEC05, NumberFormat.UInt16BE);
-        co2 = read_word(true);
-        let adc_t = read_word(true);
-        let adc_rh = read_word();
-        temperature = -45 + (175 * Math.idiv(adc_t, 1 << 16));
-        relative_humidity = 100 * Math.idiv(adc_rh, 1 << 16);
+        let values = read_words(6);
+        co2 = values[0];
+        let adc_t = values[1];
+        let adc_rh = values[2];
+        temperature =  -45 + (175 * adc_t / (1 << 16));
+        relative_humidity = 100 * adc_rh / (1 << 16);
     }
 
     /**
@@ -62,7 +63,6 @@ namespace SCD41 {
     //% weight=80 blockGap=8
     export function init() {
         read_feature_set();
-        read_serial_number();
         start_continuous_measurement();
     }
 
@@ -94,18 +94,6 @@ namespace SCD41 {
             read_feature_set();
         }
         return feature_set;
-    }
-
-    /**
-     * get serial number
-     */
-    //% blockId="SCD41_GET_SERIAL_NUMBER" block="serial number %d"
-    //% weight=80 blockGap=8
-    export function get_serial_number() {
-        if (serial_number == 0) {
-            read_serial_number();
-        }
-        return serial_number;
     }
 
     /**

@@ -44,11 +44,6 @@ Returns the feature set version as integer
 function get_feature_set()
 ```
 
-Returns the serial number as integer
-```ts
-function get_serial_number()
-```
-
 Start measurement on SCD41 development board. This method will be automatically called on initialization.
 If you call `stop_continuous_measurement()` you have to call this method again before co2, temperature and humidity
 values can be retrieved again.
