@@ -33,7 +33,20 @@ namespace SCD41 {
         serial_number = read_word(false) << 32 | read_word(false) << 16 | read_word();
     }
 
+    function get_data_ready_status() {
+        pins.i2cWriteNumber(SCD41_I2C_ADDR, 0xE4B8, NumberFormat.UInt16BE);
+        let data_ready = read_word() & 0x07FF;
+        if (data_ready > 0) {
+            return true;
+        }
+        return false;
+    }
+
     function read_measurement() {
+        // only read measurement if data is available, else use last measurement
+        if (!get_data_ready_status()) {
+            return
+        }
         pins.i2cWriteNumber(SCD41_I2C_ADDR, 0xEC05, NumberFormat.UInt16BE);
         co2 = read_word(true);
         let adc_t = read_word(true);
@@ -96,7 +109,7 @@ namespace SCD41 {
     }
 
     /**
-     * get CO2
+     * get CO2. Call this at most once every 5 seconds, else last measurement value will be returned
      */
     //% blockId="SCD41_GET_CO2" block="co2 %u"
     //% weight=80 blockGap=8
@@ -106,7 +119,7 @@ namespace SCD41 {
     }
 
     /**
-     * get temperature
+     * get temperature. Call this at most once every 5 seconds, else last measurement value will be returned
      */
     //% blockId="SCD41_GET_TEMPERATURE" block="temperature %u"
     //% weight=80 blockGap=8
@@ -119,7 +132,7 @@ namespace SCD41 {
     }
 
     /**
-     * get relative humidity
+     * get relative humidity. Call this at most once every 5 seconds, else last measurement value will be returned
      */
     //% blockId="SCD41_GET_RELATIVE_HUMIDITY" block="relative humidity %u"
     //% weight=80 blockGap=8
