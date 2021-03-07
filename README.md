@@ -7,6 +7,7 @@ This extension allows you to read CO2, temperature and relative humidity values 
 ## Supported Targets
 
 * PXT/microbit
+* Calliope mini
 
 ## I2C Address
 
@@ -37,11 +38,6 @@ function get_temperature()
 Get relative humidity in percent
 ```ts
 function get_relative_humidity()
-```
-
-Returns the feature set version as integer
-```ts
-function get_feature_set()
 ```
 
 Start measurement on SCD41 development board. This method will be automatically called on initialization.
