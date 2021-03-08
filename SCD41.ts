@@ -31,13 +31,9 @@ namespace SCD41 {
         return words;
     }
 
-    function read_feature_set() {
-        pins.i2cWriteNumber(SCD41_I2C_ADDR, 0x202f, NumberFormat.UInt16BE);
-        feature_set = read_word();
-    }
-
     function get_data_ready_status() {
         pins.i2cWriteNumber(SCD41_I2C_ADDR, 0xE4B8, NumberFormat.UInt16BE);
+        basic.pause(1);
         let data_ready = read_word() & 0x07FF;
         return data_ready > 0;
     }
@@ -48,6 +44,7 @@ namespace SCD41 {
             return
         }
         pins.i2cWriteNumber(SCD41_I2C_ADDR, 0xEC05, NumberFormat.UInt16BE);
+        basic.pause(1);
         let values = read_words(6);
         co2 = values[0];
         let adc_t = values[1];
@@ -62,7 +59,6 @@ namespace SCD41 {
     //% blockId="SCD41_INIT" block="init"
     //% weight=80 blockGap=8
     export function init() {
-        read_feature_set();
         start_continuous_measurement();
     }
 
@@ -82,18 +78,7 @@ namespace SCD41 {
     //% weight=80 blockGap=8
     export function stop_continuous_measurement() {
         pins.i2cWriteNumber(SCD41_I2C_ADDR, 0x3F86, NumberFormat.UInt16BE);
-    }
-
-    /**
-     * get feature set version
-     */
-    //% blockId="SCD41_GET_FEATURE_SET" block="feature set %u"
-    //% weight=80 blockGap=8
-    export function get_feature_set() {
-        if (feature_set == 0) {
-            read_feature_set();
-        }
-        return feature_set;
+        basic.pause(500);
     }
 
     /**
@@ -114,9 +99,9 @@ namespace SCD41 {
     export function get_temperature(unit: SCD41_T_UNIT = SCD41_T_UNIT.C) {
         read_measurement();
         if (unit == SCD41_T_UNIT.C) {
-            return temperature
+            return temperature;
         }
-        return 32 + Math.idiv(temperature * 9 , 5);
+        return 32 + ((temperature * 9) / 5);
     }
 
     /**
